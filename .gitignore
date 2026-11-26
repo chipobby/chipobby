@@ -1,0 +1,18 @@
+# Dependencias y build
+node_modules/
+dist/
+
+# Bitácoras
+*.log
+
+# Base de datos local (contiene datos de participantes: no se sube)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Capturas regenerables con scripts/capturar-guia.mjs
+test/capturas/
+
+# Sistema
+.DS_Store
+Thumbs.db

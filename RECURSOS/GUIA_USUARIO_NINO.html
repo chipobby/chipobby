@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Guía de mi aventura — Chip Obby</title>
+<!-- Guía de usuario para el participante (6–8 años). Fuente editable. -->
+<!-- Generar el PDF con: node scripts/generar-guia-pdf.mjs (salida: GUIA_USUARIO_NINO.pdf en la raíz) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#17213c; --blue:#4668e8; --blue-dark:#2d4dca; --sky:#eef2ff;
+    --yellow:#ffd86b; --cream:#fff5d9; --mint:#c6f3dd; --mint-ink:#26815a;
+    --paper:#f7f8fc; --line:#e6e9f1; --muted:#66728d; --white:#fff;
+    --coral:#ff927d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  body{font-family:"DM Sans",sans-serif;color:var(--ink);background:#dfe3ee;font-size:12.3pt;line-height:1.5}
+  @page{size:A4;margin:0}
+
+  .page{position:relative;width:210mm;min-height:297mm;background:var(--white);
+    padding:16mm 17mm 14mm;page-break-after:always;overflow:hidden}
+  .page:last-child{page-break-after:auto}
+
+  h1,h2,h3,.font-d{font-family:"Space Grotesk",sans-serif;letter-spacing:-.02em}
+  .eyebrow{font-size:8.5pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+
+  /* ---------- pie de página ---------- */
+  .foot{position:absolute;left:17mm;right:17mm;bottom:7mm;display:flex;justify-content:space-between;
+    align-items:center;font-size:7.5pt;color:#98a0b4;border-top:1px solid var(--line);padding-top:2.5mm}
+  .foot b{color:var(--blue);font-family:"Space Grotesk"}
+  .pagenum{display:grid;place-items:center;width:6mm;height:6mm;border-radius:50%;
+    background:var(--ink);color:var(--yellow);font-weight:700;font-size:7pt}
+
+  /* ---------- portada ---------- */
+  .cover{background:var(--ink);color:var(--white);display:flex;flex-direction:column;justify-content:space-between}
+  .cover .stars{position:absolute;inset:0;pointer-events:none}
+  .cover .stars i{position:absolute;color:var(--yellow);font-style:normal}
+  .cover-top{position:relative;z-index:2}
+  .cover .brand{display:flex;align-items:center;gap:3mm;font-family:"Space Grotesk";font-weight:600;font-size:13pt}
+  .cover .brand span{display:grid;place-items:center;width:9mm;height:9mm;border-radius:3mm;background:var(--yellow);color:#8b6116;font-size:14pt}
+  .cover h1{font-size:47pt;line-height:.98;font-weight:700;margin-top:16mm;max-width:170mm}
+  .cover h1 em{font-style:normal;color:var(--yellow)}
+  .cover .sub{margin-top:6mm;font-size:13.5pt;color:#b9c2da;max-width:150mm}
+  .cover-mid{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:8mm}
+  .stats{display:flex;gap:5mm;position:relative;z-index:2}
+  .stat{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.16);border-radius:4mm;
+    padding:4.5mm 6mm;min-width:37mm}
+  .stat b{display:block;font-family:"Space Grotesk";font-size:24pt;color:var(--yellow);line-height:1}
+  .stat small{font-size:8.5pt;color:#b9c2da}
+  .owner{position:relative;z-index:2;border-top:1.5px dashed rgba(255,255,255,.3);padding-top:5mm;
+    font-size:11.5pt;color:#b9c2da}
+  .owner b{color:var(--white);border-bottom:2px solid var(--yellow);display:inline-block;
+    min-width:78mm;padding:0 2mm 1mm;color:transparent}
+  .cover .chip-hero{position:relative;z-index:2;flex:none}
+
+  /* ---------- bloques internos ---------- */
+  .h-row{display:flex;align-items:flex-end;justify-content:space-between;gap:6mm;
+    border-bottom:3px solid var(--ink);padding-bottom:4mm;margin-bottom:6mm}
+  .h-row h2{font-size:23pt;line-height:1.05}
+  .h-row .tag{font-size:8pt;font-weight:700;background:var(--sky);color:var(--blue);
+    padding:2mm 3.5mm;border-radius:2.5mm;white-space:nowrap}
+  .lead{font-size:12.5pt;color:var(--muted);max-width:165mm;margin-bottom:5mm}
+  .lead b{color:var(--ink)}
+
+  .chip-say{display:flex;gap:3.5mm;background:var(--sky);border-radius:3.5mm;padding:4mm 5mm;
+    align-items:center;margin:4.5mm 0}
+  .chip-say .ic{display:grid;place-items:center;width:11mm;height:11mm;border-radius:3mm;
+    background:var(--yellow);font-size:15pt;flex:none}
+  .chip-say p{font-size:11.5pt;color:#4f5d80}
+  .chip-say b{color:var(--ink)}
+
+  .warn{background:var(--cream);border:2px solid var(--yellow);border-radius:3.5mm;
+    padding:4mm 5mm;font-size:11.3pt;color:#6b5a2c;margin:4.5mm 0}
+  .warn b{color:#4d401d}
+  .safe{background:var(--mint);border:2px solid #a8e2c6;border-radius:3.5mm;
+    padding:4mm 5mm;font-size:11.3pt;color:#1f6b4a;margin:4.5mm 0}
+  .safe b{color:#155139}
+
+  /* pasos numerados */
+  .steps{display:grid;gap:3.5mm}
+  .step{display:flex;gap:4mm;align-items:flex-start;background:var(--paper);
+    border:1.5px solid var(--line);border-radius:3.5mm;padding:3.5mm 4.5mm}
+  .step .n{flex:none;display:grid;place-items:center;width:9mm;height:9mm;border-radius:2.5mm;
+    background:var(--blue);color:#fff;font-family:"Space Grotesk";font-weight:700;font-size:12pt}
+  .step h3{font-size:12pt;margin-bottom:.8mm}
+  .step p{font-size:10.8pt;color:var(--muted)}
+  .step .range{margin-left:auto;flex:none;font-size:8pt;font-weight:700;color:var(--blue);
+    background:var(--sky);padding:1.5mm 3mm;border-radius:2mm;align-self:center}
+
+  /* reglas de oro */
+  .golds{background:var(--cream);border:2.5px solid var(--yellow);border-radius:4mm;padding:5mm 6mm}
+  .golds h3{font-size:13.5pt;margin-bottom:3mm;color:#4d401d;display:flex;align-items:center;gap:2.5mm}
+  .golds ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:2.5mm 6mm}
+  .golds li{display:flex;gap:2.5mm;font-size:11.2pt;color:#5d4f26;align-items:flex-start}
+  .golds li>b:first-child{flex:none;display:grid;place-items:center;width:6mm;height:6mm;border-radius:50%;
+    background:var(--yellow);color:#7a5b14;font-size:8.5pt;margin-top:.4mm}
+  .golds li>span{flex:1}
+  .golds li>span>b{font-weight:700;color:#4d401d}
+
+  /* diagrama de pantalla */
+  .mock{border:2.5px solid var(--ink);border-radius:4mm;overflow:hidden;background:#fff;
+    box-shadow:0 3mm 0 rgba(23,33,60,.12)}
+  .mock-bar{background:#18213b;color:#fff;display:flex;justify-content:space-between;
+    align-items:center;padding:2.5mm 4mm;font-size:8pt}
+  .mock-bar .m-brand{font-family:"Space Grotesk";font-weight:600}
+  .mock-bar .m-brand i{font-style:normal;color:var(--yellow)}
+  .mock-body{display:grid;grid-template-columns:40% 1fr;min-height:52mm}
+  .mock-list{border-right:1.5px solid var(--line);padding:3mm;display:grid;gap:2mm;align-content:start}
+  .m-prog{background:var(--sky);border-radius:2mm;padding:2mm 2.5mm;font-size:7pt;color:var(--blue);
+    display:flex;justify-content:space-between;font-weight:700}
+  .m-track{height:2mm;background:#dfe5f7;border-radius:2mm;overflow:hidden}
+  .m-track i{display:block;height:100%;width:35%;background:var(--blue)}
+  .m-row{display:flex;align-items:center;gap:2mm;border:1.5px solid var(--line);border-radius:2mm;
+    padding:1.8mm 2.5mm;font-size:7pt}
+  .m-row.sel{border-color:var(--blue);background:#fbfcff;font-weight:700}
+  .m-dot{width:4.5mm;height:4.5mm;border-radius:1.5mm;background:#eef0f5;display:grid;
+    place-items:center;font-size:6pt;color:#8a93a6;flex:none}
+  .m-dot.go{background:#dce4ff;color:var(--blue)}
+  .m-dot.ok{background:var(--mint);color:var(--mint-ink);font-weight:700}
+  .mock-detail{padding:4mm}
+  .md-tag{font-size:6.5pt;font-weight:700;letter-spacing:.1em;color:var(--blue)}
+  .md-title{font-family:"Space Grotesk";font-weight:600;font-size:12pt;margin:1.5mm 0 2mm}
+  .md-chip{background:var(--sky);border-radius:2mm;padding:2.5mm;font-size:7pt;color:#4f5d80;
+    display:flex;gap:2mm;align-items:center}
+  .md-chip span{font-size:11pt}
+  .md-btns{display:flex;gap:2.5mm;margin-top:3.5mm}
+  .md-btns i{font-style:normal;font-size:7pt;font-weight:700;padding:2mm 3.5mm;border-radius:2mm}
+  .md-btns .b1{background:#edf0fa;color:var(--blue-dark)}
+  .md-btns .b2{background:var(--blue);color:#fff}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:2.5mm 6mm;margin-top:4.5mm}
+  .legend div{display:flex;gap:2.5mm;font-size:10.6pt;color:var(--muted);align-items:flex-start}
+  .legend div>b:first-child{flex:none;display:grid;place-items:center;width:6mm;height:6mm;border-radius:50%;
+    background:var(--ink);color:var(--yellow);font-size:8.5pt;margin-top:.3mm}
+  .legend div>span>b{font-weight:700;color:var(--ink)}
+
+  /* botones explicados */
+  .btns-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm}
+  .btn-card{border:2px solid var(--line);border-radius:4mm;padding:4.5mm 4mm;background:var(--paper);
+    display:flex;flex-direction:column;gap:3mm}
+  .btn-card.wide{grid-column:span 3;flex-direction:row;align-items:center;gap:5mm;background:#fff}
+  .fake-btn{font-size:10.5pt;font-weight:700;padding:3mm 4.5mm;border-radius:2.5mm;text-align:center;
+    font-family:"DM Sans"}
+  .fb-start{background:#edf0fa;color:var(--blue-dark);border:1.5px solid #d6ddf5}
+  .fb-done{background:var(--blue);color:#fff}
+  .fb-guide{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+  .btn-card h3{font-size:11.5pt}
+  .btn-card p{font-size:10.4pt;color:var(--muted)}
+  .btn-card .after{font-size:9.6pt;background:var(--mint);color:var(--mint-ink);
+    border-radius:2mm;padding:2mm 3mm;font-weight:500}
+
+  /* progreso + insignias */
+  .prog-box{background:var(--ink);color:#fff;border-radius:4mm;padding:5mm 6mm;display:flex;
+    align-items:center;gap:6mm}
+  .prog-box .big{font-family:"Space Grotesk";font-size:30pt;font-weight:700;color:var(--yellow);line-height:1}
+  .prog-box p{font-size:11pt;color:#b9c2da;max-width:118mm}
+  .prog-box p b{color:#fff}
+  .badges{display:grid;grid-template-columns:repeat(4,1fr);gap:3.5mm;margin-top:5mm}
+  .badge{border:2px solid var(--line);border-radius:3.5mm;padding:4mm 2mm;text-align:center;background:#fff}
+  .badge .ic{font-size:22pt}
+  .badge b{display:block;font-family:"Space Grotesk";font-size:9.6pt;margin-top:1.5mm}
+  .badge small{font-size:8.2pt;color:var(--muted)}
+  .badge .win{color:var(--blue);font-weight:700}
+
+  /* fallas */
+  .fixes{display:grid;gap:3mm}
+  .fix{display:flex;gap:4mm;align-items:flex-start;border-left:4px solid var(--blue);
+    background:var(--paper);padding:3.5mm 4.5mm;border-radius:0 3mm 3mm 0}
+  .fix .n{font-family:"Space Grotesk";font-weight:700;color:var(--blue);font-size:12pt;flex:none}
+  .fix h3{font-size:11.5pt}
+  .fix p{font-size:10.6pt;color:var(--muted)}
+  .fix kbd{font-family:"DM Sans";font-weight:700;background:#fff;border:1.5px solid var(--line);
+    border-bottom-width:2.5px;border-radius:1.5mm;padding:.3mm 1.8mm;font-size:10pt;color:var(--ink)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+  .panel{border:2px solid var(--line);border-radius:4mm;padding:4.5mm 5mm;background:#fff}
+  .panel h3{font-size:12pt;margin-bottom:2.5mm;display:flex;gap:2.5mm;align-items:center}
+  .panel p,.panel li{font-size:10.5pt;color:var(--muted)}
+  .panel ul{list-style:none;display:grid;gap:1.8mm}
+  .panel li{display:flex;gap:2.5mm}
+  .panel li::before{content:"▸";color:var(--blue);font-weight:700}
+  .outro{margin-top:6mm;background:var(--ink);color:#fff;border-radius:4mm;padding:6mm;
+    display:flex;align-items:center;gap:6mm}
+  .outro h3{font-size:17pt;color:var(--yellow)}
+  .outro p{font-size:11pt;color:#b9c2da;margin-top:1.5mm}
+  .outro .sig{margin-left:auto;text-align:center;flex:none}
+  .outro .sig .ic{font-size:24pt}
+  .outro .sig small{font-size:8pt;color:#8f9ab8;display:block}
+
+  @media screen{.page{margin:8mm auto;box-shadow:0 4mm 14px rgba(0,0,0,.18)}body{padding-bottom:10mm}}
+</style>
+</head>
+<body>
+
+<!-- ============ PÁGINA 1 · PORTADA ============ -->
+<section class="page cover">
+  <div class="stars">
+    <i style="top:18mm;right:30mm;font-size:9pt">✦</i>
+    <i style="top:44mm;right:60mm;font-size:6pt;opacity:.7">✦</i>
+    <i style="top:70mm;right:22mm;font-size:7pt;opacity:.85">✦</i>
+    <i style="top:120mm;right:48mm;font-size:6pt;opacity:.6">✦</i>
+    <i style="top:150mm;left:24mm;font-size:7pt;opacity:.7">✦</i>
+    <i style="top:36mm;left:120mm;font-size:5pt;opacity:.5">✦</i>
+  </div>
+
+  <div class="cover-top">
+    <div class="brand"><span>✦</span> Chip <b style="color:#ffd86b">Obby</b></div>
+    <h1>Guía de mi<br /><em>aventura</em></h1>
+    <p class="sub">Todo lo que necesito para seguir el curso, usar mi espacio y crear mi propio videojuego en Roblox Studio.</p>
+  </div>
+
+  <div class="cover-mid">
+    <div class="stats">
+      <div class="stat"><b>20</b><small>misiones para completar</small></div>
+      <div class="stat"><b>8</b><small>insignias para ganar</small></div>
+      <div class="stat"><b>1</b><small>videojuego creado por mí</small></div>
+    </div>
+    <div class="chip-hero">
+      <!-- Chip, robot constructor -->
+      <svg width="150" height="176" viewBox="0 0 150 176" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="70" y="4" width="10" height="20" rx="5" fill="#ffd86b"/>
+        <circle cx="75" cy="6" r="7" fill="#ffd86b"/>
+        <rect x="25" y="24" width="100" height="82" rx="20" fill="#4668e8"/>
+        <rect x="37" y="38" width="76" height="54" rx="12" fill="#ffd86b"/>
+        <circle cx="59" cy="63" r="8" fill="#17213c"/>
+        <circle cx="91" cy="63" r="8" fill="#17213c"/>
+        <circle cx="61.5" cy="60.5" r="2.6" fill="#fff"/>
+        <circle cx="93.5" cy="60.5" r="2.6" fill="#fff"/>
+        <path d="M62 78c4 5 22 5 26 0" stroke="#17213c" stroke-width="5" stroke-linecap="round"/>
+        <rect x="45" y="112" width="60" height="46" rx="12" fill="#4668e8"/>
+        <rect x="57" y="122" width="36" height="10" rx="5" fill="#c6f3dd"/>
+        <rect x="57" y="137" width="22" height="8" rx="4" fill="#ffd86b"/>
+        <rect x="6" y="116" width="16" height="34" rx="8" fill="#ffd86b" transform="rotate(-14 6 116)"/>
+        <rect x="128" y="116" width="16" height="34" rx="8" fill="#ffd86b" transform="rotate(14 128 116)"/>
+        <rect x="55" y="158" width="16" height="14" rx="5" fill="#17213c"/>
+        <rect x="79" y="158" width="16" height="14" rx="5" fill="#17213c"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="owner">Esta guía es de: <b>x</b> <span style="font-size:9pt">(escribe aquí tu apodo)</span></div>
+</section>
+
+<!-- ============ PÁGINA 2 · HOLA CHIP + PASOS + REGLAS ============ -->
+<section class="page">
+  <div class="h-row">
+    <div>
+      <div class="eyebrow">Empecemos</div>
+      <h2>Hola, soy Chip. ¡Vamos a crear!</h2>
+    </div>
+    <div class="tag">PARA MÍ · 6 A 8 AÑOS</div>
+  </div>
+
+  <p class="lead">En este curso voy a crear mi propio videojuego tipo <b>Obby</b>: un camino lleno de saltos, estrellas y obstáculos. <b>No necesito saber programar</b> ni tener experiencia. Solo curiosidad, ganas de jugar y un adulto que me acompañe.</p>
+
+  <div class="chip-say">
+    <div class="ic">🤖</div>
+    <p><b>Chip dice:</b> “Cada misión es un paso chiquito. Si termino una al día, en 20 días tendré mi juego completo. ¡No hay prisa!”</p>
+  </div>
+
+  <div class="steps" style="margin-top:5mm">
+    <div class="step"><div class="n">1</div><div><h3>Imagino mi idea</h3><p>Elijo el tema, el nombre y dibujo el plano de mi juego.</p></div><div class="range">Misiones 1–3</div></div>
+    <div class="step"><div class="n">2</div><div><h3>Construyo mi mundo</h3><p>Hago plataformas, el inicio, la decoración y la meta.</p></div><div class="range">Misiones 4–6</div></div>
+    <div class="step"><div class="n">3</div><div><h3>Pruebo y mejoro</h3><p>Juego mi creación, encuentro problemas y los arreglo.</p></div><div class="range">Misiones 7–8</div></div>
+    <div class="step"><div class="n">4</div><div><h3>Programo mi juego</h3><p>Escribo instrucciones: colores mágicos, monedas, lava y luces.</p></div><div class="range">Misiones 9–17</div></div>
+    <div class="step"><div class="n">5</div><div><h3>Presento mi creación</h3><p>Termino, reviso mi lista y muestro mi juego a mi familia.</p></div><div class="range">Misiones 18–20</div></div>
+  </div>
+
+  <div class="golds" style="margin-top:5.5mm">
+    <h3>🏆 Mis 5 reglas de oro</h3>
+    <ol>
+      <li><b>1</b><span>Uso un <b>apodo</b>, nunca mi nombre completo.</span></li>
+      <li><b>2</b><span>Mi juego <b>no se publica</b>: se queda en esta computadora.</span></li>
+      <li><b>3</b><span>No compro nada: <b>ni Robux, ni premios</b>.</span></li>
+      <li><b>4</b><span>Un <b>adulto me acompaña</b> durante la aventura.</span></li>
+      <li><b>5</b><span>Si algo se ve raro, <b>aviso al adulto</b> enseguida.</span></li>
+      <li><b>6</b><span>Los errores no son fracasos: son <b>pistas para mejorar</b>.</span></li>
+    </ol>
+  </div>
+
+  <div class="foot"><span>Chip Obby · Guía de mi aventura</span><span class="pagenum">2</span></div>
+</section>
+
+<!-- ============ PÁGINA 3 · CÓMO ENTRAR Y CÓMO SE VE ============ -->
+<section class="page">
+  <div class="h-row">
+    <div>
+      <div class="eyebrow">Paso a paso</div>
+      <h2>Así entro a mi aventura</h2>
+    </div>
+    <div class="tag">4 PASOS</div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><h3>Pido que abran mi página</h3><p>Mi adulto abre la dirección de la aventura en el navegador.</p></div></div>
+    <div class="step"><div class="n">2</div><div><h3>Escribo mi apodo</h3><p>Un apodo divertido, como “Súper Constructor”. <b>Nunca</b> mi nombre completo.</p></div></div>
+    <div class="step"><div class="n">3</div><div><h3>Toco “Comenzar aventura”</h3><p>Se abre mi mapa con las 20 misiones listas para explorar.</p></div></div>
+    <div class="step"><div class="n">4</div><div><h3>Si ya jugué antes…</h3><p>Elijo “Continuar como…” y todo mi progreso sigue ahí, tal cual lo dejé.</p></div></div>
+  </div>
+
+  <div class="chip-say">
+    <div class="ic">🤖</div>
+    <p><b>Chip dice:</b> “No hay botón de guardar: <b>mi progreso se guarda solo</b> cada vez que toco un botón. Puedo cerrar y volver cuando quiera.”</p>
+  </div>
+
+  <h3 style="font-size:14pt;margin:6mm 0 3.5mm">Así se ve mi pantalla</h3>
+
+  <div class="mock">
+    <div class="mock-bar">
+      <span class="m-brand">✦ Chip <i>Obby</i></span>
+      <span>● Guardado local</span>
+      <span>Zona de adulto</span>
+    </div>
+    <div class="mock-body">
+      <div class="mock-list">
+        <div class="m-prog"><span>Mi aventura</span><span>35%</span></div>
+        <div class="m-track"><i></i></div>
+        <div class="m-row"><span class="m-dot ok">✓</span><span>Mi idea de videojuego</span></div>
+        <div class="m-row"><span class="m-dot go">2</span><span>Exploro Roblox Studio</span></div>
+        <div class="m-row sel"><span class="m-dot">3</span><span>Mis primeras piezas</span></div>
+        <div class="m-row"><span class="m-dot">4</span><span>Construyo el escenario</span></div>
+      </div>
+      <div class="mock-detail">
+        <div class="md-tag">MISIÓN 03 · CONOZCO MI HERRAMIENTA</div>
+        <div class="md-title">Mis primeras piezas</div>
+        <div class="md-chip"><span>🤖</span><p>Hoy voy a crear mis primeras piezas 3D y moverlas por el mundo.</p></div>
+        <div class="md-btns"><i class="b1">Empezar misión</i><i class="b2">Marcar como lista ✓</i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div><b>1</b><span><b style="color:#17213c">Barra superior:</b> mi nombre, si está guardado y la zona del adulto.</span></div>
+    <div><b>2</b><span><b style="color:#17213c">Mi barra de avance:</b> cuántas de las 20 misiones tengo listas.</span></div>
+    <div><b>3</b><span><b style="color:#17213c">Lista de misiones:</b> ✓ verde = lista · azul = en curso · gris = pendiente.</span></div>
+    <div><b>4</b><span><b style="color:#17213c">Mi misión:</b> el título, lo que aprenderé y mis botones de acción.</span></div>
+  </div>
+
+  <div class="foot"><span>Chip Obby · Guía de mi aventura</span><span class="pagenum">3</span></div>
+</section>
+
+<!-- ============ PÁGINA 4 · BOTONES ============ -->
+<section class="page">
+  <div class="h-row">
+    <div>
+      <div class="eyebrow">Acciones</div>
+      <h2>Los 3 botones que necesito</h2>
+    </div>
+    <div class="tag">TOCO Y LISTO</div>
+  </div>
+
+  <p class="lead">Cada misión tiene sus botones abajo. Con tocar uno es suficiente: <b>el cambio se guarda inmediatamente</b>.</p>
+
+  <div class="btns-grid">
+    <div class="btn-card">
+      <div class="fake-btn fb-start">Empezar misión</div>
+      <h3>La pongo en curso</h3>
+      <p>La misión se marca con un <b>círculo azul</b> en la lista. Sirve para saber por dónde voy si dejo el juego a medias.</p>
+      <div class="after">Se ve: “Guardamos tu misión para continuar después.”</div>
+    </div>
+
+    <div class="btn-card">
+      <div class="fake-btn fb-done">Marcar como lista ✓</div>
+      <h3>¡Terminé esta misión!</h3>
+      <p>La misión se pone <b>verde con palomita</b>, mi barra de avance sube y puedo ganar la insignia del módulo.</p>
+      <div class="after">Se ve: “¡Misión guardada! Chip está orgulloso.”</div>
+    </div>
+
+    <div class="btn-card">
+      <div class="fake-btn fb-guide">📖 Abrir la guía completa</div>
+      <h3>La clase entera</h3>
+      <p>Se despliega <b>toda la lección</b> de esa misión: materiales, pasos, errores frecuentes y secretos del facilitador.</p>
+      <div class="after">Está debajo de “Palabras mágicas”. Toco otra vez para cerrarla.</div>
+    </div>
+
+    <div class="btn-card wide">
+      <div class="fake-btn fb-done" style="flex:none">✓</div>
+      <div>
+        <h3>¿Y dónde se guarda mi progreso?</h3>
+        <p>Abajo, en el centro de la pantalla, aparece un <b>cartel oscuro redondo</b> con el mensaje de confirmación. Eso significa que mi avance quedó guardado en la base de datos de la computadora (SQLite). <b>No tengo que hacer nada más</b>: ni “Guardar”, ni enviar, ni publicar.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn">⚠️ <b>Si toco un botón y no veo el cartel:</b> no pasa nada malo. Pido ayuda a mi adulto y recargamos la página con <b>Ctrl + F5</b>. Mi progreso sigue guardado: nunca se pierde.</div>
+
+  <div class="chip-say">
+    <div class="ic">🤖</div>
+    <p><b>Chip dice:</b> “Las otras dos ventanas son fáciles: <b>🏅 Mis insignias</b> muestra lo que ya gané y <b>🗺️ Mi mapa</b> es un camino de 20 nodos. Toco un nodo y viajo directo a esa misión.”</p>
+  </div>
+
+  <div class="foot"><span>Chip Obby · Guía de mi aventura</span><span class="pagenum">4</span></div>
+</section>
+
+<!-- ============ PÁGINA 5 · PROGRESO E INSIGNIAS ============ -->
+<section class="page">
+  <div class="h-row">
+    <div>
+      <div class="eyebrow">Mi recompensa</div>
+      <h2>Mi progreso y mis insignias</h2>
+    </div>
+    <div class="tag">8 PREMIOS SIMBÓLICOS</div>
+  </div>
+
+  <div class="prog-box">
+    <div class="big">X/20</div>
+    <p><b>Mi barra de avance</b> muestra cuántas misiones tengo listas. Cada vez que marco una misión, la barra crece y el porcentaje sube. Al llegar a 20/20 seré <b style="color:#ffd86b">Maestro del Obby</b>.</p>
+  </div>
+
+  <div class="chip-say">
+    <div class="ic">🗺️</div>
+    <p><b>Mi mapa</b> tiene 20 nodos en camino. Los verdes son misiones listas. Tocar cualquier nodo me lleva a esa misión en un clic.</p>
+  </div>
+
+  <h3 style="font-size:14pt;margin:5.5mm 0 1mm">Las 8 insignias que puedo ganar</h3>
+  <div class="badges">
+    <div class="badge"><div class="ic">🎨</div><b>Creador de ideas</b><small class="win">Misión 1</small></div>
+    <div class="badge"><div class="ic">🔍</div><b>Explorador</b><small class="win">Misión 2</small></div>
+    <div class="badge"><div class="ic">🧱</div><b>Constructor</b><small class="win">Misión 6</small></div>
+    <div class="badge"><div class="ic">🏃</div><b>Probador</b><small class="win">Misión 8</small></div>
+    <div class="badge"><div class="ic">💻</div><b>Programador novato</b><small class="win">Misión 10</small></div>
+    <div class="badge"><div class="ic">⭐</div><b>Cazador de estrellas</b><small class="win">Misión 13</small></div>
+    <div class="badge"><div class="ic">🛡️</div><b>Guardián de reglas</b><small class="win">Misión 17</small></div>
+    <div class="badge"><div class="ic">🏆</div><b>Maestro del Obby</b><small class="win">Misión 20</small></div>
+  </div>
+
+  <div class="warn" style="margin-top:5.5mm">🏅 <b>Las insignias se ganan avanzando, nunca comprando.</b> No usan Robux ni costos: son como parches de una mochila de explorador. Y no hay competencia: mi avance es <b>mío</b>, no se compara con el de otros.</div>
+
+  <div class="two-col" style="margin-top:5mm">
+    <div class="panel">
+      <h3>🧭 ¿En qué orden sigo?</h3>
+      <ul>
+        <li>Abro la primera misión gris de la lista.</li>
+        <li>Leo lo que aprenderé con Chip.</li>
+        <li>Hago la actividad en Roblox Studio con mi adulto.</li>
+        <li>Marco “Marcar como lista” y sigo.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>⏸️ ¿Y si me canso?</h3>
+      <ul>
+        <li>Puedo dejar una misión “en curso” y retomarla otro día.</li>
+        <li>Hay pausas activas dentro de cada misión: me levanto, estiro y vuelvo.</li>
+        <li>Mi progreso espera por mí sin perderse.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot"><span>Chip Obby · Guía de mi aventura</span><span class="pagenum">5</span></div>
+</section>
+
+<!-- ============ PÁGINA 6 · AYUDA, ADULTO Y CIERRE ============ -->
+<section class="page">
+  <div class="h-row">
+    <div>
+      <div class="eyebrow">Si algo falla</div>
+      <h2>Errores, ayuda y mi adulto</h2>
+    </div>
+    <div class="tag">SIN MIEDO A FALLAR</div>
+  </div>
+
+  <div class="fixes">
+    <div class="fix"><div class="n">1</div><div><h3>Me quedo tranquilo/a</h3><p>Todos los creadores de videojuegos fallan primero y arreglan después. Un error es una pista, no el fin del juego.</p></div></div>
+    <div class="fix"><div class="n">2</div><div><h3>Miro el cartel de abajo</h3><p>El mensaje oscuro me dice qué pasó: “Guardamos tu misión”, o si hubo un problema.</p></div></div>
+    <div class="fix"><div class="n">3</div><div><h3>Recargo la página</h3><p>Pido ayuda y usamos <kbd>Ctrl</kbd> + <kbd>F5</kbd>. Así cargo la versión más reciente y todo vuelve a responder.</p></div></div>
+    <div class="fix"><div class="n">4</div><div><h3>Cierro y vuelvo a entrar</h3><p>Con “Continuar como…” mi apodo recupera todas las misiones que ya había marcado.</p></div></div>
+    <div class="fix"><div class="n">5</div><div><h3>Aviso a mi adulto</h3><p>Si algo se ve raro, sale una ventana que no conozco o aparece un error rojo, le aviso. Nunca escribo contraseñas ni datos personales.</p></div></div>
+  </div>
+
+  <div class="two-col" style="margin-top:5.5mm">
+    <div class="panel">
+      <h3>🧑 <b style="font-family:'DM Sans'">Zona de adulto</b></h3>
+      <p>Está arriba a la derecha. Es <b>para mi adulto</b>: ahí ve mi progreso sesión por sesión y puede revisar cómo voy. Yo no la necesito para jugar mis misiones.</p>
+    </div>
+    <div class="panel">
+      <h3>🧱 <b style="font-family:'DM Sans'">En Roblox Studio</b></h3>
+      <p>Antes de tocar <b>▶ Play</b>, leo la tarjeta de código <b>en voz alta</b>. Si veo letras rojas en Output, comparo la línea con la tarjeta, carácter por carácter, con mi adulto.</p>
+    </div>
+  </div>
+
+  <div class="safe" style="margin-top:5mm">🔒 <b>Mis datos están seguros:</b> en esta aventura solo se guardan <b>mi apodo y mi progreso</b>. Nada de nombres completos, contraseñas, fotos, escuela ni direcciones. Mi videojuego <b>no se publica</b> y no se usa Robux.</div>
+
+  <div class="outro">
+    <div>
+      <h3>¡Nos vemos en la siguiente misión, creador!</h3>
+      <p>Abre la misión, toca “Empezar misión” y construye un poquito más. Veinticuatro pasos pequeños y tendrás un juego para compartir con tu familia.</p>
+    </div>
+    <div class="sig">
+      <div class="ic">🤖</div>
+      <small>Chip · tu guía</small>
+    </div>
+  </div>
+
+  <div class="foot"><span>Chip Obby · Guía de mi aventura · v1.0 · 25/11/2026</span><span class="pagenum">6</span></div>
+</section>
+
+</body>
+</html>
