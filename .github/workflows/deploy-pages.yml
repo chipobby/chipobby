@@ -32,8 +32,8 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Verificar que las 20 sesiones existen
-        run: node -e "const fs=require('fs');const f=Array.from({length:20},(_,i)=>`MODULOS/SESION_${String(i+1).padStart(2,'0')}.md`);const miss=f.filter(x=>!fs.existsSync(x));if(miss.length){console.error('Faltan sesiones:',miss);process.exit(1)}console.log('20 sesiones presentes')"
+      - name: Verificar que las 20 sesiones existentes
+        run: node -e 'const fs=require("fs");const f=[];for(let i=1;i<=20;i++)f.push("MODULOS/SESION_"+String(i).padStart(2,"0")+".md");const miss=f.filter(x=>!fs.existsSync(x));if(miss.length){console.error("Faltan sesiones:",miss);process.exit(1)}console.log("20 sesiones presentes")'
 
       - name: Compilar
         run: npm run build
