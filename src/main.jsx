@@ -2,18 +2,31 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { marked } from 'marked';
 import './styles.css';
+import { apiLocal } from './api-local.js';
+import { cursoEstatico } from './curso-estatico.js';
 
 const API = 'http://localhost:3001/api';
-const fallback = [
-  { id: 1, title: 'Mi idea de videojuego', module: 'Conozco mi herramienta', mission: 'Imagina tu mundo' },
-  { id: 2, title: 'Exploro Roblox Studio', module: 'Conozco mi herramienta', mission: 'Conoce tus herramientas' }
-];
+// En GitHub Pages (u otro dominio) no hay servidor Express: se usa el modo
+// navegador con localStorage. En localhost se intenta el servidor primero.
+const EN_LOCAL = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+let modoLocal = !EN_LOCAL;
+const fallback = cursoEstatico.sessions;
 
 async function api(url, options) {
-  const response = await fetch(`${API}${url}`, { headers: { 'Content-Type': 'application/json' }, ...options });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'No pudimos guardar el cambio.');
-  return data;
+  if (modoLocal) return apiLocal(url, options);
+  try {
+    const response = await fetch(`${API}${url}`, { headers: { 'Content-Type': 'application/json' }, ...options });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'No pudimos guardar el cambio.');
+    return data;
+  } catch (error) {
+    // Sin servidor accesible (API apagada o sitio estático): modo navegador.
+    if (error instanceof TypeError) {
+      modoLocal = true;
+      return apiLocal(url, options);
+    }
+    throw error;
+  }
 }
 
 function App() {
@@ -32,7 +45,7 @@ function App() {
     Promise.all([api('/course'), api('/learners')]).then(([courseData, learnerData]) => {
       setCourse(courseData); setLearners(learnerData.learners);
       if (learner) api(`/learners/${learner.id}`).then((data) => setProgress(data.progress));
-    }).catch(() => setMessage('Enciende el servidor para comenzar la aventura.')).finally(() => setLoading(false));
+    }).catch(() => setMessage('No pudimos cargar el curso. Recarga la página para intentarlo de nuevo.')).finally(() => setLoading(false));
   }, []);
 
   const sessions = course.sessions.length ? course.sessions : fallback;
@@ -97,7 +110,7 @@ function MissionView({ sessions, grouped, current, selected, setSelected, status
 
 function BadgesView({ badges, earned, done }) { return <section className="content"><div className="page-heading"><div><div className="eyebrow">Pequeñas victorias</div><h1>Mis insignias</h1></div><span className="session-count">{earned.length} <small>/ 8</small></span></div><div className="badge-intro">Cada insignia aparece cuando completas una parte importante de tu aventura. ¡Sigue construyendo!</div><div className="badge-grid">{badges.map((badge) => <div className={`badge-card ${done >= badge.session ? 'earned' : ''}`} key={badge.key}><div className="badge-icon">{badge.icon}</div><b>{badge.name}</b><small>{done >= badge.session ? '¡La ganaste!' : `Misión ${badge.session}`}</small></div>)}</div></section>; }
 function MapView({ sessions, statusOf, setSelected, setView }) { return <section className="content"><div className="page-heading"><div><div className="eyebrow">De la idea al juego</div><h1>Mi mapa</h1></div></div><div className="map-card"><div className="map-path">{sessions.map((session, index) => <button key={session.id} className={`map-node ${statusOf(session.id)}`} onClick={() => { setSelected(session.id); setView('missions'); }}><span>{statusOf(session.id) === 'done' ? '✓' : session.id}</span><small>{index === 0 ? 'Empieza aquí' : session.id === 20 ? 'Gran final' : `Misión ${session.id}`}</small></button>)}</div></div></section>; }
-function AdultPanel({ learners, chooseLearner, active, progress, course }) { const done = progress.filter((item) => item.status === 'done').length; return <main className="adult-panel"><div className="page-heading"><div><div className="eyebrow">Acompañamiento adulto</div><h1>Seguimiento del grupo</h1></div></div><div className="adult-layout"><section className="learner-list"><h3>Exploradores</h3>{learners.map((item) => <button className={active?.id === item.id ? 'active' : ''} key={item.id} onClick={() => chooseLearner(item)}><span className="adult-avatar">🤖</span><b>{item.nickname}</b><span>›</span></button>)}</section><section className="report-card">{active ? <><div className="report-head"><div className="avatar">🤖</div><div><h2>{active.nickname}</h2><p>Progreso guardado en SQLite</p></div><strong>{done}/20</strong></div><div className="progress-track large"><i style={{ width: `${done * 5}%` }} /></div><div className="report-grid">{course.sessions.map((session) => { const item = progress.find((p) => p.sessionId === session.id); return <div key={session.id} className={item?.status || 'todo'}><span>{item?.status === 'done' ? '✓' : session.id}</span><small>{session.title}</small></div>; })}</div></> : <div className="empty-report">Elige un explorador para ver su progreso.</div>}</section></div></main>; }
+function AdultPanel({ learners, chooseLearner, active, progress, course }) { const done = progress.filter((item) => item.status === 'done').length; return <main className="adult-panel"><div className="page-heading"><div><div className="eyebrow">Acompañamiento adulto</div><h1>Seguimiento del grupo</h1></div></div><div className="adult-layout"><section className="learner-list"><h3>Exploradores</h3>{learners.map((item) => <button className={active?.id === item.id ? 'active' : ''} key={item.id} onClick={() => chooseLearner(item)}><span className="adult-avatar">🤖</span><b>{item.nickname}</b><span>›</span></button>)}</section><section className="report-card">{active ? <><div className="report-head"><div className="avatar">🤖</div><div><h2>{active.nickname}</h2><p>Progreso guardado en {modoLocal ? 'este navegador' : 'SQLite'}</p></div><strong>{done}/20</strong></div><div className="progress-track large"><i style={{ width: `${done * 5}%` }} /></div><div className="report-grid">{course.sessions.map((session) => { const item = progress.find((p) => p.sessionId === session.id); return <div key={session.id} className={item?.status || 'todo'}><span>{item?.status === 'done' ? '✓' : session.id}</span><small>{session.title}</small></div>; })}</div></> : <div className="empty-report">Elige un explorador para ver su progreso.</div>}</section></div></main>; }
 
 createRoot(document.getElementById('root')).render(<App />);
 

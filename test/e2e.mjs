@@ -57,7 +57,7 @@ try {
   // --- Botón "Empezar misión" en cada misión ---
   await rows.nth(0).click();
   await page.click('button.secondary:has-text("Empezar")');
-  await page.waitForSelector('.toast', { timeout: 5000 });
+  await page.waitForSelector('.toast:has-text("Guardamos tu misión")', { timeout: 5000 });
   const toastDoing = await page.locator('.toast').textContent();
   check('Botón "Empezar misión" muestra confirmación', /guard/i.test(toastDoing || ''), toastDoing || '');
   await page.locator('.toast').click();
@@ -69,7 +69,7 @@ try {
 
   // --- Botón "Marcar como lista" ---
   await page.click('button.primary:has-text("Marcar como lista")');
-  await page.waitForSelector('.toast', { timeout: 5000 });
+  await page.waitForSelector('.toast:has-text("Misión guardada")', { timeout: 5000 });
   const toastDone = await page.locator('.toast').textContent();
   check('Botón "Marcar como lista" muestra confirmación', /misión guardada/i.test(toastDone || ''), toastDone || '');
   await page.locator('.toast').click();

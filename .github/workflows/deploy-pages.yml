@@ -1,0 +1,55 @@
+# Despliegue automático de la app Chip Obby en GitHub Pages.
+# Compila el frontend (modo estático con localStorage) y publica dist/.
+name: Desplegar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar que las 20 sesiones existen
+        run: node -e "const fs=require('fs');const f=Array.from({length:20},(_,i)=>`MODULOS/SESION_${String(i+1).padStart(2,'0')}.md`);const miss=f.filter(x=>!fs.existsSync(x));if(miss.length){console.error('Faltan sesiones:',miss);process.exit(1)}console.log('20 sesiones presentes')"
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Subir artefacto de Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

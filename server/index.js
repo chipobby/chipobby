@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { badges, parseSession } from '../shared/curso.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -30,37 +31,17 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 
-const moduleNames = {
-  1: 'Conozco mi herramienta', 2: 'Conozco mi herramienta', 3: 'Conozco mi herramienta',
-  4: 'Construyo mi mundo', 5: 'Construyo mi mundo', 6: 'Construyo mi mundo',
-  7: 'Pruebo y mejoro', 8: 'Pruebo y mejoro', 9: 'Aprendo a dar instrucciones',
-  10: 'Aprendo a dar instrucciones', 11: 'Aprendo a dar instrucciones',
-  12: 'Objetos mágicos', 13: 'Objetos mágicos', 14: 'Objetos mágicos',
-  15: 'Retos y reglas', 16: 'Retos y reglas', 17: 'Retos y reglas',
-  18: 'Mi gran videojuego', 19: 'Mi gran videojuego', 20: 'Mi gran videojuego'
-};
-
 function readSessions() {
   const dir = path.join(root, 'MODULOS');
   return Array.from({ length: 20 }, (_, index) => {
     const id = index + 1;
     const filename = `SESION_${String(id).padStart(2, '0')}.md`;
     const markdown = fs.readFileSync(path.join(dir, filename), 'utf8');
-    const title = markdown.match(/^# Sesión \d+\. (.+)$/m)?.[1] ?? `Sesión ${id}`;
-    const mission = markdown.match(/## 2\. Nombre de la misión\n\n([^\n]+)/)?.[1]?.replaceAll('**', '') ?? '';
-    const objective = markdown.match(/## 4\. Objetivo de aprendizaje\n\n([\s\S]*?)(?=\n## )/)?.[1]?.trim() ?? '';
-    const concepts = markdown.match(/## 8\. Conceptos nuevos\n\n([\s\S]*?)(?=\n## )/)?.[1]?.trim() ?? '';
-    return { id, title, module: moduleNames[id], mission, objective, concepts, markdown };
+    return parseSession(id, markdown);
   });
 }
 
 const sessions = readSessions();
-const badges = [
-  ['idea', '🎨', 'Creador de ideas', 1], ['explorer', '🔍', 'Explorador', 2],
-  ['builder', '🧱', 'Constructor', 6], ['tester', '🏃', 'Probador', 8],
-  ['coder', '💻', 'Programador novato', 10], ['star', '⭐', 'Cazador de estrellas', 13],
-  ['rules', '🛡', 'Guardián de reglas', 17], ['master', '🏆', 'Maestro del Obby', 20]
-].map(([key, icon, name, session]) => ({ key, icon, name, session }));
 
 function getLearner(id) {
   return db.prepare('SELECT * FROM learners WHERE id = ?').get(id);
