@@ -38,6 +38,7 @@ function App() {
   const [view, setView] = useState('missions');
   const [nickname, setNickname] = useState('');
   const [adultMode, setAdultMode] = useState(false);
+  const [configMode, setConfigMode] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -75,12 +76,65 @@ function App() {
     catch (error) { setMessage(error.message); }
   }
 
+  async function exportarProgreso() {
+    const data = {
+      exportado: new Date().toISOString(),
+      version: 1,
+      learner: learner || JSON.parse(localStorage.getItem('chip-learner') || 'null'),
+      nickname: nickname || (learner?.nickname || ''),
+      progress: progress,
+      done, percent, selected, view
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chip-obby-progreso-${(learner?.nickname || 'explorador').replace(/[^a-z0-9]/gi, '_')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setMessage('Progreso exportado a archivo JSON.');
+  }
+
+  async function importarProgreso(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.learner || !Array.isArray(data.progress)) throw new Error('Archivo no válido.');
+        localStorage.setItem('chip-learner', JSON.stringify(data.learner));
+        setLearner(data.learner);
+        setNickname(data.nickname || data.learner.nickname || '');
+        setProgress(data.progress);
+        if (modoLocal) {
+          const clave = 'chip-progress-local';
+          const mapa = JSON.parse(localStorage.getItem(clave) || '{}');
+          mapa[data.learner.id] = data.progress.map((p) => ({ sessionId: p.sessionId, status: p.status, note: p.note || '', updatedAt: p.updatedAt || new Date().toISOString() }));
+          localStorage.setItem(clave, JSON.stringify(mapa));
+        } else {
+          data.progress.forEach((p) => {
+            api(`/learners/${data.learner.id}/progress/${p.sessionId}`, { method: 'PUT', body: JSON.stringify({ status: p.status, note: p.note || '' }) }).catch(() => {});
+          });
+        }
+        setConfigMode(false);
+        setMessage('Progreso restaurado desde el archivo: apodo y avance recuperados.');
+      } catch (error) {
+        setMessage('No se pudo importar: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
   if (loading) return <div className="splash"><div className="chip">🤖</div><h1>Preparando tu aventura…</h1></div>;
 
   return <div className="app-shell">
     <header className="topbar">
       <button className="brand" onClick={() => setView('missions')}><span className="brand-mark">✦</span><span>Chip <b>Obby</b></span></button>
-      <div className="top-actions"><span className="save-dot">● Guardado local</span><button className="adult-link" onClick={() => setAdultMode(!adultMode)}>{adultMode ? 'Volver a misiones' : 'Zona de adulto'}</button></div>
+      <div className="top-actions"><span className="save-dot">● Guardado en tu navegador</span><button className="config-link" onClick={() => setConfigMode(true)}>⚙️ Configuración</button><button className="adult-link" onClick={() => setAdultMode(!adultMode)}>{adultMode ? 'Volver a misiones' : 'Zona de adulto'}</button></div>
     </header>
     {adultMode ? <AdultPanel learners={learners} chooseLearner={chooseLearner} active={learner} progress={progress} course={course} /> : <>
       {!learner ? <Welcome nickname={nickname} setNickname={setNickname} createLearner={createLearner} learners={learners} chooseLearner={chooseLearner} /> : <>
@@ -97,6 +151,7 @@ function App() {
         </main>
       </>}
     </>}
+    {configMode && <ConfigPanel onExport={exportarProgreso} onImport={importarProgreso} onClose={() => setConfigMode(false)} learner={learner} progress={progress} nickname={nickname} done={done} percent={percent} />}
   </div>;
 }
 
@@ -105,12 +160,16 @@ function Welcome({ nickname, setNickname, createLearner, learners, chooseLearner
 }
 
 function MissionView({ sessions, grouped, current, selected, setSelected, statusOf, mark, message, setMessage }) {
-  return <section className="content"><div className="page-heading"><div><div className="eyebrow">Tu camino de creador</div><h1>Mis misiones</h1></div><span className="session-count">{selected} <small>/ 20</small></span></div><div className="mission-grid"><div className="mission-list">{Object.entries(grouped).map(([module, items], groupIndex) => <div className="module-group" key={module}><h3><span className="module-number">0{groupIndex + 1}</span>{module}</h3>{items.map((item) => <button key={item.id} className={`mission-row ${selected === item.id ? 'selected' : ''}`} onClick={() => setSelected(item.id)}><span className={`mission-status ${statusOf(item.id)}`}>{statusOf(item.id) === 'done' ? '✓' : item.id}</span><span><b>{item.title}</b><small>{item.mission?.replaceAll('**', '')}</small></span><i>{statusOf(item.id) === 'done' ? 'Listo' : '›'}</i></button>)}</div>)}</div><article className="mission-detail"><div className="detail-top"><span className="mission-tag">MISIÓN {String(current.id).padStart(2, '0')}</span><span className="module-tag">{current.module}</span></div><h2>{current.title}</h2><p className="mission-line">{current.mission?.replaceAll('**', '')}</p><div className="chip-speech"><div className="mini-chip">🤖</div><p>“{current.objective || 'Hoy vamos a construir algo nuevo para tu aventura.'}”</p></div><div className="detail-section"><h4>Lo que aprenderás</h4><p>{current.objective}</p></div><div className="detail-section"><h4>Palabras mágicas</h4><div className="concepts" dangerouslySetInnerHTML={{ __html: marked.parse(current.concepts || 'Explorar · Construir · Probar') }} /></div><details className="full-guide"><summary>📖 Abrir la guía completa de esta misión</summary><div dangerouslySetInnerHTML={{ __html: marked.parse(current.markdown || "") }} /></details><div className="detail-actions"><button className="secondary" onClick={() => mark('doing')}>Empezar misión</button><button className="primary" onClick={() => mark('done')}>Marcar como lista <span>✓</span></button></div>{message && <button className="toast" onClick={() => setMessage('')}>{message}</button>}</article></div></section>;
+  return <section className="content"><div className="page-heading"><div><div className="eyebrow">Tu camino de creador</div><h1>Mis misiones</h1></div><span className="session-count">{selected} <small>/ 20</small></span></div><div className="mission-grid"><div className="mission-list">{Object.entries(grouped).map(([module, items], groupIndex) => <div className="module-group" key={module}><h3><span className="module-number">0{groupIndex + 1}</span>{module}</h3>{items.map((item) => <button key={item.id} className={`mission-row ${selected === item.id ? 'selected' : ''}`} onClick={() => setSelected(item.id)}><span className={`mission-status ${statusOf(item.id)}`}>{statusOf(item.id) === 'done' ? '✓' : item.id}</span><span><b>{item.title}</b><small>{item.mission?.replaceAll('**', '')}</small></span><i>{statusOf(item.id) === 'done' ? 'Listo' : '›'}</i></button>)}</div>)}</div><article className="mission-detail"><div className="detail-top"><span className="mission-tag">MISIÓN {String(current.id).padStart(2, '0')}</span><span className="module-tag">{current.module}</span></div><h2>{current.title}</h2><p className="mission-line">{current.mission?.replaceAll('**', '')}</p><div className="chip-speech"><div className="mini-chip">🤖</div><p>“{current.objective || 'Hoy vamos a construir algo nuevo para tu aventura.'}”</p></div><div className="detail-section"><h4>Lo que aprenderás</h4><p>{current.objective}</p></div><div className="detail-section"><h4>Palabras mágicas</h4><div className="concepts" dangerouslySetInnerHTML={{ __html: marked.parse(current.concepts || 'Explorar · Construir · Probar') }} /></div><details className="full-guide"><summary>📖 Abrir la guía completa de esta misión</summary><div className="guia-imagen-contenedor"><img src={`/imagenes-misiones/mision-${String(current.id).padStart(2, '0')}.webp`} alt={`Ilustración de la misión ${current.id}`} className="guia-imagen" /></div><div dangerouslySetInnerHTML={{ __html: marked.parse(current.markdown || "") }} /></details><div className="detail-actions"><button className="secondary" onClick={() => mark('doing')}>Empezar misión</button><button className="primary" onClick={() => mark('done')}>Marcar como lista <span>✓</span></button></div>{message && <button className="toast" onClick={() => setMessage('')}>{message}</button>}</article></div></section>;
 }
 
 function BadgesView({ badges, earned, done }) { return <section className="content"><div className="page-heading"><div><div className="eyebrow">Pequeñas victorias</div><h1>Mis insignias</h1></div><span className="session-count">{earned.length} <small>/ 8</small></span></div><div className="badge-intro">Cada insignia aparece cuando completas una parte importante de tu aventura. ¡Sigue construyendo!</div><div className="badge-grid">{badges.map((badge) => <div className={`badge-card ${done >= badge.session ? 'earned' : ''}`} key={badge.key}><div className="badge-icon">{badge.icon}</div><b>{badge.name}</b><small>{done >= badge.session ? '¡La ganaste!' : `Misión ${badge.session}`}</small></div>)}</div></section>; }
 function MapView({ sessions, statusOf, setSelected, setView }) { return <section className="content"><div className="page-heading"><div><div className="eyebrow">De la idea al juego</div><h1>Mi mapa</h1></div></div><div className="map-card"><div className="map-path">{sessions.map((session, index) => <button key={session.id} className={`map-node ${statusOf(session.id)}`} onClick={() => { setSelected(session.id); setView('missions'); }}><span>{statusOf(session.id) === 'done' ? '✓' : session.id}</span><small>{index === 0 ? 'Empieza aquí' : session.id === 20 ? 'Gran final' : `Misión ${session.id}`}</small></button>)}</div></div></section>; }
 function AdultPanel({ learners, chooseLearner, active, progress, course }) { const done = progress.filter((item) => item.status === 'done').length; return <main className="adult-panel"><div className="page-heading"><div><div className="eyebrow">Acompañamiento adulto</div><h1>Seguimiento del grupo</h1></div></div><div className="adult-layout"><section className="learner-list"><h3>Exploradores</h3>{learners.map((item) => <button className={active?.id === item.id ? 'active' : ''} key={item.id} onClick={() => chooseLearner(item)}><span className="adult-avatar">🤖</span><b>{item.nickname}</b><span>›</span></button>)}</section><section className="report-card">{active ? <><div className="report-head"><div className="avatar">🤖</div><div><h2>{active.nickname}</h2><p>Progreso guardado en {modoLocal ? 'este navegador' : 'SQLite'}</p></div><strong>{done}/20</strong></div><div className="progress-track large"><i style={{ width: `${done * 5}%` }} /></div><div className="report-grid">{course.sessions.map((session) => { const item = progress.find((p) => p.sessionId === session.id); return <div key={session.id} className={item?.status || 'todo'}><span>{item?.status === 'done' ? '✓' : session.id}</span><small>{session.title}</small></div>; })}</div></> : <div className="empty-report">Elige un explorador para ver su progreso.</div>}</section></div></main>; }
+
+function ConfigPanel({ onExport, onImport, onClose, learner, progress, nickname, done, percent }) {
+  return <section className="config-panel"><div className="config-overlay" onClick={onClose} /><div className="config-box"><div className="config-header"><h2>⚙️ Configuración</h2><button className="config-cerrar" onClick={onClose}>✕</button></div><div className="config-body"><div className="config-info"><p><b>Explorador:</b> {learner?.nickname || nickname || '—'}</p><p><b>Misiones completadas:</b> {done} de 20</p><p><b>Avance:</b> {percent}%</p><p>Tu progreso (apodo, misiones hechas y nombre de usuario) se guarda en este navegador. Puedes exportarlo para llevarlo a otra computadora o celular.</p></div><div className="config-actions"><button className="primary wide" onClick={onExport}>📤 Exportar progreso (JSON)</button><label style={{ display: 'block', marginTop: '1rem' }}><input type="file" accept=".json" onChange={onImport} style={{ marginTop: '0.5rem' }} />📥 Importar progreso desde JSON</label><p className="config-nota">Al importar se recupera tu apodo y todo tu avance. No se borra nada: solo se completa con lo que traiga el archivo.</p></div></div></div></section>;
+}
 
 createRoot(document.getElementById('root')).render(<App />);
 
