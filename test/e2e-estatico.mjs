@@ -43,14 +43,14 @@ try {
   await rows.nth(0).click();
   await page.locator('.full-guide summary').click();
   await page.waitForTimeout(150);
-  const guideLen = await page.locator('.full-guide > div').evaluate((el) => el.textContent.trim().length);
+  const guideLen = await page.locator('.full-guide .guia-texto').evaluate((el) => el.textContent.trim().length);
   check('Guía completa de la misión 1 con contenido empaquetado', guideLen > 500, `${guideLen} chars`);
 
   // Guía de la última misión también
   await rows.nth(19).click();
   await page.locator('.full-guide summary').click();
   await page.waitForTimeout(150);
-  const guide20 = await page.locator('.full-guide > div').evaluate((el) => el.textContent.trim().length);
+  const guide20 = await page.locator('.full-guide .guia-texto').evaluate((el) => el.textContent.trim().length);
   check('Guía completa de la misión 20', guide20 > 500, `${guide20} chars`);
 
   // --- Acciones ---

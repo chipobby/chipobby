@@ -48,7 +48,7 @@ try {
     await page.waitForTimeout(60);
     await page.locator('.full-guide summary').click();
     await page.waitForTimeout(80);
-    const len = await page.locator('.full-guide > div').evaluate((el) => el.textContent.trim().length);
+    const len = await page.locator('.full-guide .guia-texto').evaluate((el) => el.textContent.trim().length);
     if (len < 500) { guideErrors++; console.log(`  guía corta en misión ${i + 1}: ${len} chars`); }
     await page.locator('.full-guide summary').click();
   }
